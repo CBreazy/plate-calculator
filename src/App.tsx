@@ -26,15 +26,48 @@ function calculatePlates(targetWeight: number): number[] {
 
 function App() {
   const [targetWeight, setTargetWeight] = useState<number>(135);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState<string>('135');
   
   const plates = useMemo(() => calculatePlates(targetWeight), [targetWeight]);
   
   const handleIncrement = () => {
-    setTargetWeight(prev => prev + 5);
+    const newWeight = targetWeight + 5;
+    setTargetWeight(newWeight);
+    setInputValue(newWeight.toString());
   };
   
   const handleDecrement = () => {
-    setTargetWeight(prev => Math.max(45, prev - 5));
+    const newWeight = Math.max(45, targetWeight - 5);
+    setTargetWeight(newWeight);
+    setInputValue(newWeight.toString());
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+  };
+
+  const handleInputBlur = () => {
+    const parsed = parseFloat(inputValue);
+    if (!isNaN(parsed)) {
+      const validWeight = Math.max(45, parsed);
+      setTargetWeight(validWeight);
+      setInputValue(validWeight.toString());
+    } else {
+      setInputValue(targetWeight.toString());
+    }
+    setIsEditing(false);
+  };
+
+  const handleInputFocus = () => {
+    setIsEditing(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleInputBlur();
+    }
   };
 
   return (
@@ -58,7 +91,17 @@ function App() {
             </button>
             
             <div className="text-center">
-              <div className="text-4xl font-bold">{targetWeight}</div>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onFocus={handleInputFocus}
+                onKeyDown={handleKeyDown}
+                className={`text-4xl font-bold bg-transparent text-center w-32 outline-none ${
+                  isEditing ? 'border-b-2 border-blue-400' : 'border-b-2 border-transparent'
+                }`}
+              />
               <div className="text-sm text-gray-400">Total Weight (lbs)</div>
             </div>
             
