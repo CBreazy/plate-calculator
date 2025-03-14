@@ -34,6 +34,14 @@ function App() {
   
   const plates = useMemo(() => calculatePlates(targetWeight, barbellWeight), [targetWeight, barbellWeight]);
   
+  const percentages = useMemo(() => {
+    const percentRange = Array.from({ length: 6 }, (_, i) => 90 - (i * 5));
+    return percentRange.map(percent => ({
+      percent,
+      weight: Math.round(targetWeight * (percent / 100))
+    }));
+  }, [targetWeight]);
+
   const handleIncrement = () => {
     const newWeight = targetWeight + 5;
     setTargetWeight(newWeight);
@@ -146,6 +154,21 @@ function App() {
             >
               <PlusCircle className="w-6 h-6 text-blue-400" />
             </button>
+          </div>
+
+          <div className="mb-6">
+            <div className="text-sm text-gray-400 mb-2 text-center">Percentage Calculations</div>
+            <div className="grid grid-cols-3 gap-2">
+              {percentages.map(({ percent, weight }) => (
+                <div 
+                  key={percent} 
+                  className="text-center bg-gray-700/50 rounded-lg p-2 transition-colors hover:bg-gray-700/70"
+                >
+                  <div className="text-lg font-semibold text-blue-400">{weight}</div>
+                  <div className="text-xs text-gray-400">{percent}%</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-4">
