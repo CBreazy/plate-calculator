@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Dumbbell, MinusCircle, PlusCircle } from 'lucide-react';
+import { Dumbbell, MinusCircle, PlusCircle, BarChart } from 'lucide-react';
 
 // Standard weight plates in pounds
 const AVAILABLE_PLATES = [45, 35, 25, 10, 5, 2.5];
-const BARBELL_WEIGHT = 45; // Standard Olympic barbell weight
+const DEFAULT_BARBELL_WEIGHT = 45; // Default Olympic barbell weight
 
-function calculatePlates(targetWeight: number): number[] {
-  if (targetWeight <= BARBELL_WEIGHT) return [];
+function calculatePlates(targetWeight: number, barbellWeight: number): number[] {
+  if (targetWeight <= barbellWeight) return [];
   
   // We need to calculate for one side only
-  const weightPerSide = (targetWeight - BARBELL_WEIGHT) / 2;
+  const weightPerSide = (targetWeight - barbellWeight) / 2;
   const plates: number[] = [];
   
   let remainingWeight = weightPerSide;
@@ -26,10 +26,13 @@ function calculatePlates(targetWeight: number): number[] {
 
 function App() {
   const [targetWeight, setTargetWeight] = useState<number>(135);
+  const [barbellWeight, setBarbellWeight] = useState<number>(DEFAULT_BARBELL_WEIGHT);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>('135');
+  const [isBarbellEditing, setIsBarbellEditing] = useState<boolean>(false);
+  const [barbellInputValue, setBarbellInputValue] = useState<string>(DEFAULT_BARBELL_WEIGHT.toString());
   
-  const plates = useMemo(() => calculatePlates(targetWeight), [targetWeight]);
+  const plates = useMemo(() => calculatePlates(targetWeight, barbellWeight), [targetWeight, barbellWeight]);
   
   const handleIncrement = () => {
     const newWeight = targetWeight + 5;
@@ -38,7 +41,7 @@ function App() {
   };
   
   const handleDecrement = () => {
-    const newWeight = Math.max(45, targetWeight - 5);
+    const newWeight = Math.max(barbellWeight, targetWeight - 5);
     setTargetWeight(newWeight);
     setInputValue(newWeight.toString());
   };
@@ -51,7 +54,7 @@ function App() {
   const handleInputBlur = () => {
     const parsed = parseFloat(inputValue);
     if (!isNaN(parsed)) {
-      const validWeight = Math.max(45, parsed);
+      const validWeight = Math.max(barbellWeight, parsed);
       setTargetWeight(validWeight);
       setInputValue(validWeight.toString());
     } else {
@@ -67,6 +70,38 @@ function App() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleInputBlur();
+    }
+  };
+
+  const handleBarbellInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBarbellInputValue(value);
+  };
+
+  const handleBarbellInputBlur = () => {
+    const parsed = parseFloat(barbellInputValue);
+    if (!isNaN(parsed) && parsed > 0) {
+      const validWeight = parsed;
+      setBarbellWeight(validWeight);
+      setBarbellInputValue(validWeight.toString());
+      // Ensure total weight is not less than barbell weight
+      if (targetWeight < validWeight) {
+        setTargetWeight(validWeight);
+        setInputValue(validWeight.toString());
+      }
+    } else {
+      setBarbellInputValue(barbellWeight.toString());
+    }
+    setIsBarbellEditing(false);
+  };
+
+  const handleBarbellInputFocus = () => {
+    setIsBarbellEditing(true);
+  };
+
+  const handleBarbellKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleBarbellInputBlur();
     }
   };
 
@@ -115,8 +150,22 @@ function App() {
 
           <div className="space-y-4">
             <div className="text-center p-3 bg-gray-700 rounded-lg">
-              <div className="text-sm text-gray-400 mb-1">Barbell Weight</div>
-              <div className="font-semibold">{BARBELL_WEIGHT} lbs</div>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <div className="text-sm text-gray-400">Barbell Weight</div>
+                <BarChart className="w-4 h-4 text-blue-400" />
+              </div>
+              <input
+                type="text"
+                value={barbellInputValue}
+                onChange={handleBarbellInputChange}
+                onBlur={handleBarbellInputBlur}
+                onFocus={handleBarbellInputFocus}
+                onKeyDown={handleBarbellKeyDown}
+                className={`font-semibold bg-transparent text-center outline-none ${
+                  isBarbellEditing ? 'border-b border-blue-400' : 'border-b border-transparent'
+                }`}
+              />
+              <span className="font-semibold"> lbs</span>
             </div>
 
             <div className="bg-gray-700 rounded-lg p-4">
